@@ -1,0 +1,7 @@
+id,source,input,expected_verdict,expected_page,notes
+# Gold Set — §20.2: يملأه الفريق يدوياً (40–60 حالة مقترحة على الأنواع التسعة).
+# source = اسم ملف المصدر في tests/fixtures، input = الاقتباس أو السؤال.
+# NOTE: هذا الهيكل جاهز؛ الحالات الحقيقية تُضاف بعد اختيار كتب الاختبار (Needs Clarification).
+G-001,fixture_text.txt,آيات بينات لكل مسلم,EXACT,1,حالة تامة مرجعية
+G-002,fixture_text.txt,آيات بينات لكل كافر,ALTERED,1,تبديل كلمة جوهرية
+G-003,fixture_text.txt,نص غير موجود إطلاقاً,NOT_FOUND,,خارج المصدر

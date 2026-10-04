@@ -1,0 +1,44 @@
+# project_progress — سجل تقدم مشروع نقل (Naql)
+آخر تحديث: 2026-10-04 (نهاية جلسة البناء الأولى)
+
+## 1) خطوات تم تنفيذها ✅
+- قراءة ملفي المتطلبات والـ Spec Kit كاملين.
+- هيكلة المشروع وفق §3: app/ naql_core/ prompts/ eval/ tests/ docs/ data/.
+- pyproject.toml (Ruff 100 عمود، mypy strict، pytest) + Makefile (setup/run/test/lint/eval) + .env.example + .gitignore.
+- AGENTS.md (الدستور كاملاً) + README.md + docs/requirements.md (فهرس المعرّفات).
+- naql_core/models.py: كل الأنواع والأحكام الثابتة (N6) بـ StrEnum و dataclasses مجمّدة.
+- naql_core/errors.py: استثناءات مخصصة ترث NaqlError (E1).
+- naql_core/config.py: إعدادات من متغيرات البيئة فقط (C10).
+- naql_core/thresholds.py: كل العتبات الرقمية بتوثيق قيمتها المعيارية (K3, CS5).
+- naql_core/normalize.py: تعيين عربي (تشكيل، تطويل، ألف/همزات، ى/ي، ة/ه، ترقيم، أرقام هندية، مسافات) + خريطة مواضع للأصل (K1, C6).
+- naql_core/match.py: نص متصل بحدود صفحات (K2)، بحث تام عابر للصفحات، مطابقة تقريبية بنوافذ منزلقة مع عامل تغطية، فروق كلمات، حكم صفحة (PDF/طبعة)، بوابة verify_quote_exists (C1).
+- naql_core/db.py + schema.sql: مخطط كامل (documents/pages/chunks/FTS5/check_runs/qa_runs/feedback/schema_version) + delete_document الشامل (D5) + دوال مسماة فقط (D3) + معاملات مربوطة (D2).
+- naql_core/ingest.py: PyMuPDF مع إعادة بناء ترتيب RTL من صناديق الكلمات (حل مشكلة استخراج العربية المعكوس)، OCR بـ Tesseract عند غياب طبقة النص، تقسيم chunks بتداخل، تقدّم وتحذير صفحات منخفضة الجودة (FR-05/06).
+- naql_core/index.py: بحث FTS5 (BM25) + embeddings محلية حتمية (n-gram hashing، ADR-0001).
+- naql_core/retrieve.py: دمج RRF + عتبة امتناع (§16.2/16.3).
+- naql_core/llm.py: LLMClient قابل للاستبدال (disabled/openai_compatible) + FakeLLMClient (T4) + تحميل موجّهات بإصدارات (K5).
+- naql_core/qa.py: خط سؤال/جواب كامل: رفض فتوى → استرجاع → امتناع → LLM → فحص آلي لكل مقتبس → حذف/امتناع (FR-20..26, K4, E4) + بديل حتمي اقتباسي عند تعطيل LLM.
+- naql_core/claims.py: حكم دعم الاستنتاج (S1) مع تصفية العبارات غير الحرفية.
+- naql_core/safety.py: كاشف أسئلة الفتوى والترجيح (C5).
+- prompts/qa_answer.v1.md و prompts/claim_support.v1.md.
+- app/: main.py (RTL CSS + تنقّل)، pages/1_source.py (رفع، إزاحة، حذف)، pages/2_check.py (تحقق + فروق + صورة صفحة + حكم استنتاج + تقييم)، pages/3_qa.py (سؤال وجواب مع امتناع)، components/render_* (4)، state.py، strings_ar.py (كل النصوص العربية — S7).
+- tests/unit: 44 اختباراً (normalize/match/db/retrieve/qa/claims/safety) — كلها ناجحة.
+- eval/: run_eval.py + gold_set.csv (هيكل + 3 حالات مرجعية) + fixture — نتيجة 3/3 (100%).
+- ADR-0001: قرار embeddings المحلية.
+- فحوصات: ruff check ✅، ruff format ✅، pytest 44/44 ✅، eval ✅، تشغيل واجهة Streamlit فعلياً واستجابة HTTP 200 ✅، اختبار دخان شامل على PDF عربي حقيقي (EXACT/ALTERED+PAGE_WRONG/NOT_FOUND/Q&A/رفض فتوى) ✅.
+
+## 2) الخطوة الحالية
+- لا يوجد عمل جارٍ؛ الجلسة الأولى مكتملة. لاستكمال المشروع: اقرأ بالترتيب
+  AGENTS.md ← docs/requirements.md ← docs/STATUS.md ← docs/decisions/ ثم
+  شغّل make test && make lint وخذ أول مهمة من «الخطوات المتبقية».
+
+## 3) خطوات متبقية ⏳
+1. [§20.2] تعبئة Gold Set الحقيقي (40–60 حالة على الأنواع التسعة) بعد اختيار كتب الاختبار — قرار فريق (Needs Clarification).
+2. [K3] معايرة العتبات (FUZZY/MINOR_DIFF/ALTERED/SEMANTIC_ONLY/ABSTAIN) على Gold Set وإلحاق النتائج في eval/results/.
+3. [TC-14/15, M9] اختبار مسار OCR على PDF مصوّر حقيقي (يتطلب tesseract مع حزمة ara على جهاز التشغيل).
+4. [S2] إدخال عدة عناصر تحقق دفعة واحدة + جدول وتقرير مجمّع.
+5. [S3] Highlight كلمات على صورة الصفحة (يحتاج إحداثيات OCR — يُخزَّن bbox في ingest لاحقاً).
+6. [S4, FR-43] تصدير تقرير التحقق (Markdown).
+7. [S5] وضع «قريب بالمعنى فقط» في الواجهة (المحرك يدعمه: Verdict.SEMANTIC_ONLY).
+8. تشغيل mypy naql_core عند توفر الشبكة (تعذّر تثبيته في هذه الجلسة — انحراف موثق في STATUS.md).
+9. اختيار وتفعيل مزود LLM حقيقي عبر متغيرات البيئة عند الحاجة (الوضع الافتراضي: بديل اقتباسي حتمي دون شبكة).
